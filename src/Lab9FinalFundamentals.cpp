@@ -3,7 +3,7 @@
 /******************************************************/
 
 #line 1 "/Users/ashleylibasci/IoTFolderLabs/Lab9FinalFundamentals/src/Lab9FinalFundamentals.ino"
-#include "env.h"
+#include "env.h" //including everything
 
 #include <blynk.h>
 #include <Wire.h>
@@ -14,19 +14,17 @@
 void setup();
 void loop();
 #line 9 "/Users/ashleylibasci/IoTFolderLabs/Lab9FinalFundamentals/src/Lab9FinalFundamentals.ino"
-SYSTEM_THREAD(ENABLED);
+SYSTEM_THREAD(ENABLED); //enables system
 
-VCNL4040 proximitySensor;
+VCNL4040 proximitySensor; //declares VCNL & Adafruit as things
 OledWingAdafruit display;
 
-#define greenLED D7
+#define greenLED D7 //gives names for everything
 #define yellowLED D6
 #define blueLED D5
 #define TMP A4
-
-long startingProxValue = 0;
-long deltaNeeded = 0;
-boolean nothingThere = false;
+#define pot A1
+#define button D4
 
 uint16_t value;
 
@@ -40,6 +38,8 @@ void setup()
   pinMode(yellowLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
   pinMode(TMP, INPUT);
+  pinMode(pot, INPUT);
+  pinMode(button, INPUT);
 
   display.setup();
   display.clearDisplay();
@@ -78,6 +78,14 @@ void loop()
   Blynk.virtualWrite(V1, celsius);
   Blynk.virtualWrite(V2, farenheit);
 
+  value = analogRead(pot);
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println(value);
+  display.display();
+
   if (ambientValue <= 250)
   {
     digitalWrite(blueLED, HIGH);
@@ -99,25 +107,28 @@ void loop()
     digitalWrite(yellowLED, LOW);
   }
 
-  if (display.pressedA())
-  {
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setCursor(0, 0);
-    display.println(ambientValue);
-    display.display();
-  }
+  // if (display.pressedA())
+  // {
+  //   display.clearDisplay();
+  //   display.setTextSize(1);
+  //   display.setTextColor(WHITE);
+  //   display.setCursor(0, 0);
+  //   display.println(ambientValue);
+  //   display.display();
+  //   Serial.println(ambientValue);
+  // }
 
-  if (display.pressedB())
-  {
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setCursor(0, 0);
-    display.println(celsius);
-    display.setCursor(0, 15);
-    display.println(farenheit);
-    display.display();
-  }
+  // if (display.pressedB())
+  // {
+  //   display.clearDisplay();
+  //   display.setTextSize(1);
+  //   display.setTextColor(WHITE);
+  //   display.setCursor(0, 0);
+  //   display.println(celsius);
+  //   display.setCursor(0, 15);
+  //   display.println(farenheit);
+  //   display.display();
+  //   Serial.println(farenheit);
+  //   Serial.println(celsius);
+  // }
 }
