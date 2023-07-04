@@ -14,42 +14,47 @@
 void setup();
 void loop();
 #line 9 "/Users/ashleylibasci/IoTFolderLabs/Lab9FinalFundamentals/src/Lab9FinalFundamentals.ino"
-SYSTEM_THREAD(ENABLED); //enables system
+SYSTEM_THREAD(ENABLED); // enables system
 
-VCNL4040 proximitySensor; //declares VCNL & Adafruit as things
+VCNL4040 proximitySensor; // declares VCNL & Adafruit as things
 OledWingAdafruit display;
 
-#define greenLED D7 //gives names for everything
+#define greenLED D7 // gives names for everything
 #define yellowLED D6
 #define blueLED D5
 #define TMP A4
 #define pot A1
 #define button D4
 
-uint16_t value;
+uint16_t value; // uint
+
+unsigned int firstPotValue = 0;
+unsigned int secondPotValue = 0;
+unsigned int lowValue = 0;
+unsigned int highValue = 0;
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(9600); // starts up everything
   Wire.begin();
   Blynk.begin(BLYNK_AUTH_TOKEN);
 
-  pinMode(greenLED, OUTPUT);
+  pinMode(greenLED, OUTPUT); // says whether things are inputs/outputs
   pinMode(yellowLED, OUTPUT);
   pinMode(blueLED, OUTPUT);
   pinMode(TMP, INPUT);
   pinMode(pot, INPUT);
   pinMode(button, INPUT);
 
-  display.setup();
+  display.setup(); // starts up display
   display.clearDisplay();
   display.display();
 
-  proximitySensor.begin();
+  proximitySensor.begin(); // starts prox sensor
   proximitySensor.powerOffProximity();
   proximitySensor.powerOnAmbient();
 
-  if (proximitySensor.begin() == false)
+  if (proximitySensor.begin() == false) // confirms if prox sensor is connected
   {
     display.clearDisplay();
     display.setTextSize(1);
@@ -64,21 +69,23 @@ void setup()
 
 void loop()
 {
-  display.loop();
+  display.loop(); // starts display and blynk
   Blynk.run();
 
-  unsigned int ambientValue = proximitySensor.getAmbient();
+  bool buttonValue = digitalRead(button);
 
-  uint64_t reading = analogRead(TMP);
-  double voltage = (reading * 3.3) / 4095.0;
-  double celsius = (voltage - 0.5) * 100;
+  unsigned int ambientValue = proximitySensor.getAmbient(); // always getting the ambient values
+
+  uint64_t reading = analogRead(TMP);        // read TMP
+  double voltage = (reading * 3.3) / 4095.0; // calculations for TMP
+  double celsius = (voltage - 0.5) * 10;
   double farenheit = (celsius * 9 / 5) + 32;
 
-  Blynk.virtualWrite(V0, ambientValue);
+  Blynk.virtualWrite(V0, ambientValue); // sends data to blynk
   Blynk.virtualWrite(V1, celsius);
   Blynk.virtualWrite(V2, farenheit);
 
-  value = analogRead(pot);
+  value = analogRead(pot); // printing out potentiometer values
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -86,49 +93,75 @@ void loop()
   display.println(value);
   display.display();
 
-  if (ambientValue <= 250)
+  if (buttonValue == true)
   {
-    digitalWrite(blueLED, HIGH);
-    digitalWrite(yellowLED, LOW);
-    digitalWrite(greenLED, LOW);
-    Blynk.logEvent("tooDark");
-  }
-  else if (ambientValue >= 9000)
-  {
-    digitalWrite(yellowLED, HIGH);
-    digitalWrite(blueLED, LOW);
-    digitalWrite(greenLED, LOW);
-    Blynk.logEvent("tooBright");
-  }
-  else
-  {
-    digitalWrite(greenLED, HIGH);
-    digitalWrite(blueLED, LOW);
-    digitalWrite(yellowLED, LOW);
-  }
+    if (firstPotValue == 0)
+    {
+      firstPotValue = analogRead(pot);
+    }
+    else if (secondPotValue == 0)
+    {
+      secondPotValue = analogRead(pot);
+      if (firstPotValue < secondPotValue)
+      {
+        lowValue = firstPotValue;
+        highValue = secondPotValue;
+      }
+      else
+      {
+        highValue = firstPotValue;
+        lowValue = secondPotValue;
+      }
+      Serial.println("lowValue:");
+      Serial.println(lowValue);
+      Serial.println("highValue:");
+      Serial.println(highValue);
+    }
 
-  // if (display.pressedA())
-  // {
-  //   display.clearDisplay();
-  //   display.setTextSize(1);
-  //   display.setTextColor(WHITE);
-  //   display.setCursor(0, 0);
-  //   display.println(ambientValue);
-  //   display.display();
-  //   Serial.println(ambientValue);
-  // }
+    if (ambientValue <= lowValue) // if light too dark go blue
+    {
+      digitalWrite(blueLED, HIGH);
+      digitalWrite(yellowLED, LOW);
+      digitalWrite(greenLED, LOW);
+      Blynk.logEvent("tooDark");
+    }
+    else if (ambientValue >= highValue) // if light too bright go yellow
+    {
+      digitalWrite(yellowLED, HIGH);
+      digitalWrite(blueLED, LOW);
+      digitalWrite(greenLED, LOW);
+      Blynk.logEvent("tooBright");
+    }
+    else // if light fine go green
+    {
+      digitalWrite(greenLED, HIGH);
+      digitalWrite(blueLED, LOW);
+      digitalWrite(yellowLED, LOW);
+    }
 
-  // if (display.pressedB())
-  // {
-  //   display.clearDisplay();
-  //   display.setTextSize(1);
-  //   display.setTextColor(WHITE);
-  //   display.setCursor(0, 0);
-  //   display.println(celsius);
-  //   display.setCursor(0, 15);
-  //   display.println(farenheit);
-  //   display.display();
-  //   Serial.println(farenheit);
-  //   Serial.println(celsius);
-  // }
+    // if (display.pressedA())
+    // {
+    //   display.clearDisplay();
+    //   display.setTextSize(1);
+    //   display.setTextColor(WHITE);
+    //   display.setCursor(0, 0);
+    //   display.println(ambientValue);
+    //   display.display();
+    //   Serial.println(ambientValue);
+    // }
+
+    // if (display.pressedB())
+    // {
+    //   display.clearDisplay();
+    //   display.setTextSize(1);
+    //   display.setTextColor(WHITE);
+    //   display.setCursor(0, 0);
+    //   display.println(celsius);
+    //   display.setCursor(0, 15);
+    //   display.println(farenheit);
+    //   display.display();
+    //   Serial.println(farenheit);
+    //   Serial.println(celsius);
+    // }
+  }
 }
